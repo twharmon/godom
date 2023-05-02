@@ -1,0 +1,4 @@
+github.com/twharmon/slices v0.0.4 h1:IP57dg20jEZZ8PTHiNEUhsczRJyICt1GG5l0UbbzKFE=
+github.com/twharmon/slices v0.0.4/go.mod h1:kvdFM+ID+IJ+GzwcMs2rByPS33YToa+n44y4j59iOZU=
+github.com/twharmon/stacks v0.0.0-20220713161431-072355563524 h1:zAnDrRALDVD4ywfyQeuYDvrOky9/eRDEvPRqHbRIDJM=
+github.com/twharmon/stacks v0.0.0-20220713161431-072355563524/go.mod h1:TlXPU+LPeMtwSGjMrD8m2JHUKRybwmtxOUnOPx7SfCw=
