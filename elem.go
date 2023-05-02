@@ -109,14 +109,11 @@ func (e *Elem) Replace(with *Elem) {
 	store.put(e)
 }
 
-// func (e *Elem) Remove() {
-// 	parent := e.val.Get("parentNode")
-// 	parent.Call("removeChild", e.val)
-// 	e.Clear()
-// 	store.put(e)
-// }
-
 func (e *Elem) OnClick(cb func(*MouseEvent)) *Elem {
+	if cb == nil {
+		e.removeEventListener("click")
+		return e
+	}
 	e.setEventListener("click", js.FuncOf(func(_ js.Value, args []js.Value) any {
 		go cb(newMouseEvent("click", args[0]))
 		return nil
