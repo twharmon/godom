@@ -10,7 +10,7 @@ type Elem struct {
 	ty        string
 	val       js.Value
 	parent    *Elem
-	children  []*Elem
+	children  map[*Elem]struct{}
 	listeners map[string]js.Func
 	attrs     map[string]struct{}
 	// Done      chan struct{}
@@ -19,7 +19,7 @@ type Elem struct {
 func (e *Elem) AppendChild(children ...*Elem) *Elem {
 	for _, child := range children {
 		e.val.Call("appendChild", child.val)
-		e.children = append(e.children, child)
+		e.children[child] = struct{}{}
 		child.parent = e
 	}
 	return e
@@ -80,7 +80,7 @@ func (e *Elem) ToggleClass(name string) *Elem {
 }
 
 func (e *Elem) Clear() {
-	for _, child := range e.children {
+	for child := range e.children {
 		e.RemoveChild(child)
 		child.Clear()
 	}
@@ -89,15 +89,7 @@ func (e *Elem) Clear() {
 func (e *Elem) RemoveChild(child *Elem) {
 	e.val.Call("removeChild", child.val)
 	store.put(child)
-	for i, ch := range e.children {
-		if ch == child {
-			if i < len(e.children)-1 {
-				e.children[i] = e.children[len(e.children)-1]
-			}
-			e.children = e.children[:len(e.children)-1]
-			break
-		}
-	}
+	delete(e.children, child)
 }
 
 func (e *Elem) ReplaceWith(new *Elem) {
@@ -107,13 +99,8 @@ func (e *Elem) ReplaceWith(new *Elem) {
 }
 
 func (e *Elem) replaceChild(old *Elem, new *Elem) {
-	for i, child := range e.children {
-		if child == old {
-			e.children[i] = new
-			new.parent = e
-			return
-		}
-	}
+	delete(e.children, old)
+	e.children[new] = struct{}{}
 }
 
 func (e *Elem) OnClick(cb func(*MouseEvent)) *Elem {
