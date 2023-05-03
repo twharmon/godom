@@ -1,6 +1,7 @@
 package godom
 
 import (
+	"fmt"
 	"strings"
 	"syscall/js"
 )
@@ -8,30 +9,39 @@ import (
 type Elem struct {
 	ty        string
 	val       js.Value
+	parent    *Elem
 	children  []*Elem
 	listeners map[string]js.Func
 	attrs     map[string]struct{}
-	Done      chan struct{}
+	// Done      chan struct{}
 }
 
 func (e *Elem) AppendChild(children ...*Elem) *Elem {
 	for _, child := range children {
 		e.val.Call("appendChild", child.val)
 		e.children = append(e.children, child)
+		child.parent = e
 	}
 	return e
 }
 
 func (e *Elem) Text(text any) *Elem {
-	if len(e.children) == 1 && e.children[0].isTextNode() {
-		e.children[0].val.Set("nodeValue", text)
-		return e
+	if e.isTextNode() {
+		e.val.Set("nodeValue", text)
+	} else {
+		panic(fmt.Sprintf("can not set text on element of type %s", e.ty))
 	}
-	e.Clear()
-	n := CreateTextElem(text)
-	e.val.Call("appendChild", n.val)
-	e.children = append(e.children, n)
 	return e
+	// If Text() allows setting one text node as children of other element then incorporate this:
+	// if len(e.children) == 1 && e.children[0].isTextNode() {
+	// 	e.children[0].val.Set("nodeValue", text)
+	// 	return e
+	// }
+	// e.Clear()
+	// n := CreateTextElem(text)
+	// e.val.Call("appendChild", n.val)
+	// e.children = append(e.children, n)
+	// return e
 }
 
 func (e *Elem) Attr(name string, value any) *Elem {
@@ -90,23 +100,20 @@ func (e *Elem) RemoveChild(child *Elem) {
 	}
 }
 
-func (e *Elem) ReplaceChild(newChild *Elem, oldChild *Elem) {
-	e.val.Call("replaceChild", newChild.val, oldChild.val)
-	for i, ch := range e.children {
-		if ch == oldChild {
-			ch.Clear()
-			store.put(ch)
-			e.children[i] = newChild
-			break
-		}
-	}
+func (e *Elem) ReplaceWith(new *Elem) {
+	e.val.Call("replaceWith", new.val)
+	store.put(e)
+	e.parent.replaceChild(e, new)
 }
 
-func (e *Elem) Replace(with *Elem) {
-	parent := e.val.Get("parentNode")
-	parent.Call("replaceChild", with.val, e.val)
-	e.Clear()
-	store.put(e)
+func (e *Elem) replaceChild(old *Elem, new *Elem) {
+	for i, child := range e.children {
+		if child == old {
+			e.children[i] = new
+			new.parent = e
+			return
+		}
+	}
 }
 
 func (e *Elem) OnClick(cb func(*MouseEvent)) *Elem {
@@ -116,6 +123,18 @@ func (e *Elem) OnClick(cb func(*MouseEvent)) *Elem {
 	}
 	e.setEventListener("click", js.FuncOf(func(_ js.Value, args []js.Value) any {
 		go cb(newMouseEvent("click", args[0]))
+		return nil
+	}))
+	return e
+}
+
+func (e *Elem) OnInput(cb func(*InputEvent)) *Elem {
+	if cb == nil {
+		e.removeEventListener("input")
+		return e
+	}
+	e.setEventListener("input", js.FuncOf(func(_ js.Value, args []js.Value) any {
+		go cb(newInputEvent(args[0]))
 		return nil
 	}))
 	return e

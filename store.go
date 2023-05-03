@@ -16,14 +16,17 @@ func newElemStore() *elemStore {
 }
 
 func (es *elemStore) put(e *Elem) {
-	for ty := range e.listeners {
-		e.removeEventListener(ty)
-	}
-	for attr := range e.attrs {
-		e.val.Call("removeAttribute", attr)
-	}
 	if e.isTextNode() {
 		e.val.Set("nodeValue", nil)
+	} else {
+		e.Clear()
+		e.val.Set("value", nil)
+		for ty := range e.listeners {
+			e.removeEventListener(ty)
+		}
+		for attr := range e.attrs {
+			e.val.Call("removeAttribute", attr)
+		}
 	}
 	es.mu.Lock()
 	es.elems[e.ty] = append(es.elems[e.ty], e)
