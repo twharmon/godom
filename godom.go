@@ -18,7 +18,8 @@ func Create(tag string) *Elem {
 func Mount(selector string, e *Elem) {
 	val := document.Call("querySelector", selector)
 	c := &Elem{
-		val: val,
+		val:      val,
+		children: make(map[*Elem]struct{}),
 	}
 	c.AppendChild(e)
 }

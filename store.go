@@ -51,6 +51,7 @@ func (es *elemStore) get(ty string, texts ...any) *Elem {
 		e.val = document.Call("createTextNode", texts[0])
 	} else {
 		e.val = document.Call("createElement", ty)
+		e.children = make(map[*Elem]struct{})
 	}
 	return &e
 }
