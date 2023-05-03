@@ -101,6 +101,7 @@ func (e *Elem) ReplaceWith(new *Elem) {
 func (e *Elem) replaceChild(old *Elem, new *Elem) {
 	delete(e.children, old)
 	e.children[new] = struct{}{}
+	new.parent = e
 }
 
 func (e *Elem) OnClick(cb func(*MouseEvent)) *Elem {
