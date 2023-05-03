@@ -12,7 +12,7 @@ type Interval struct {
 
 func SetInterval(fn func(), dur time.Duration) *Interval {
 	jsfn := js.FuncOf(func(_ js.Value, _ []js.Value) any {
-		fn()
+		go fn()
 		return nil
 	})
 	return &Interval{
