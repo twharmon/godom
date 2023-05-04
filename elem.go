@@ -11,7 +11,7 @@ type Elem struct {
 	val       js.Value
 	parent    *Elem
 	children  map[*Elem]struct{}
-	listeners map[string]js.Func
+	listeners map[*Listener]struct{}
 	attrs     map[string]struct{}
 }
 
@@ -103,69 +103,37 @@ func (e *Elem) replaceChild(old *Elem, new *Elem) {
 	new.parent = e
 }
 
-func (e *Elem) OnClick(cb func(*MouseEvent)) *Elem {
-	if cb == nil {
-		e.removeEventListener("click")
-		return e
-	}
-	e.setEventListener("click", js.FuncOf(func(_ js.Value, args []js.Value) any {
+func (e *Elem) AddMouseEventListener(ty string, cb func(*MouseEvent)) *Listener {
+	fn := js.FuncOf(func(_ js.Value, args []js.Value) any {
 		go cb(newMouseEvent(args[0]))
 		return nil
-	}))
-	return e
+	})
+	l := &Listener{
+		ty:   ty,
+		elem: e,
+		fn:   fn,
+	}
+	e.addEventListener(l)
+	return l
 }
 
-// func (e *Elem) AddMouseEventListener(ty string, cb func(*MouseEvent)) *listener {
-// 	fn := js.FuncOf(func(_ js.Value, args []js.Value) any {
-// 		go cb(newMouseEvent(args[0]))
-// 		return nil
-// 	})
-// 	e.setEventListener(ty, fn)
-// 	return &listener{
-// 		ty:   ty,
-// 		elem: e,
-// 		fn:   fn,
-// 	}
-// }
-
-func (e *Elem) OnInput(cb func(*InputEvent)) *Elem {
-	if cb == nil {
-		e.removeEventListener("input")
-		return e
-	}
-	e.setEventListener("input", js.FuncOf(func(_ js.Value, args []js.Value) any {
+func (e *Elem) AddInputEventListener(ty string, cb func(*InputEvent)) *Listener {
+	fn := js.FuncOf(func(_ js.Value, args []js.Value) any {
 		go cb(newInputEvent(args[0]))
 		return nil
-	}))
-	return e
+	})
+	l := &Listener{
+		ty:   ty,
+		elem: e,
+		fn:   fn,
+	}
+	e.addEventListener(l)
+	return l
 }
 
-func (e *Elem) OnMouseMove(cb func(*MouseEvent)) *Elem {
-	if cb == nil {
-		e.removeEventListener("mousemove")
-		return e
-	}
-	e.setEventListener("mousemove", js.FuncOf(func(_ js.Value, args []js.Value) any {
-		go cb(newMouseEvent(args[0]))
-		return nil
-	}))
-	return e
-}
-
-func (e *Elem) setEventListener(ty string, f js.Func) {
-	e.removeEventListener(ty)
-	if e.listeners == nil {
-		e.listeners = make(map[string]js.Func)
-	}
-	e.listeners[ty] = f
-	e.val.Call("addEventListener", ty, f)
-}
-
-func (e *Elem) removeEventListener(ty string) {
-	if f, ok := e.listeners[ty]; ok {
-		e.val.Call("removeEventListener", ty, f)
-		f.Release()
-	}
+func (e *Elem) addEventListener(l *Listener) {
+	e.listeners[l] = struct{}{}
+	e.val.Call("addEventListener", l.ty, l.fn)
 }
 
 func (e *Elem) registerAttr(name string) {

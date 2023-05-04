@@ -34,8 +34,8 @@ func (es *elemStore) put(e *Elem) {
 		if valueElements[e.ty] {
 			e.val.Set("value", nil)
 		}
-		for ty := range e.listeners {
-			e.removeEventListener(ty)
+		for l := range e.listeners {
+			l.Remove()
 		}
 		for attr := range e.attrs {
 			e.val.Call("removeAttribute", attr)
@@ -65,6 +65,7 @@ func (es *elemStore) get(ty string, texts ...any) *Elem {
 	} else {
 		e.val = document.Call("createElement", ty)
 		e.children = make(map[*Elem]struct{})
+		e.listeners = make(map[*Listener]struct{})
 	}
 	return &e
 }
