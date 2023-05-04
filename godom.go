@@ -6,6 +6,23 @@ import (
 
 var global = js.Global()
 var document = global.Get("document")
+var head = document.Get("head")
+var body = document.Get("body")
+
+var Document = &Elem{
+	val:      document,
+	children: make(map[*Elem]struct{}),
+}
+
+var Head = &Elem{
+	val:      head,
+	children: make(map[*Elem]struct{}),
+}
+
+var Body = &Elem{
+	val:      body,
+	children: make(map[*Elem]struct{}),
+}
 
 var store = newElemStore()
 

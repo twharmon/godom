@@ -13,7 +13,6 @@ type Elem struct {
 	children  map[*Elem]struct{}
 	listeners map[string]js.Func
 	attrs     map[string]struct{}
-	// Done      chan struct{}
 }
 
 func (e *Elem) AppendChild(children ...*Elem) *Elem {
@@ -110,11 +109,24 @@ func (e *Elem) OnClick(cb func(*MouseEvent)) *Elem {
 		return e
 	}
 	e.setEventListener("click", js.FuncOf(func(_ js.Value, args []js.Value) any {
-		go cb(newMouseEvent("click", args[0]))
+		go cb(newMouseEvent(args[0]))
 		return nil
 	}))
 	return e
 }
+
+// func (e *Elem) AddMouseEventListener(ty string, cb func(*MouseEvent)) *listener {
+// 	fn := js.FuncOf(func(_ js.Value, args []js.Value) any {
+// 		go cb(newMouseEvent(args[0]))
+// 		return nil
+// 	})
+// 	e.setEventListener(ty, fn)
+// 	return &listener{
+// 		ty:   ty,
+// 		elem: e,
+// 		fn:   fn,
+// 	}
+// }
 
 func (e *Elem) OnInput(cb func(*InputEvent)) *Elem {
 	if cb == nil {
@@ -123,6 +135,18 @@ func (e *Elem) OnInput(cb func(*InputEvent)) *Elem {
 	}
 	e.setEventListener("input", js.FuncOf(func(_ js.Value, args []js.Value) any {
 		go cb(newInputEvent(args[0]))
+		return nil
+	}))
+	return e
+}
+
+func (e *Elem) OnMouseMove(cb func(*MouseEvent)) *Elem {
+	if cb == nil {
+		e.removeEventListener("mousemove")
+		return e
+	}
+	e.setEventListener("mousemove", js.FuncOf(func(_ js.Value, args []js.Value) any {
+		go cb(newMouseEvent(args[0]))
 		return nil
 	}))
 	return e

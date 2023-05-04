@@ -5,13 +5,11 @@ import "syscall/js"
 // MouseEvent .
 type MouseEvent struct {
 	val js.Value
-	ty  string
 }
 
-func newMouseEvent(ty string, val js.Value) *MouseEvent {
+func newMouseEvent(val js.Value) *MouseEvent {
 	return &MouseEvent{
 		val: val,
-		ty:  ty,
 	}
 }
 
@@ -32,7 +30,7 @@ func (e *MouseEvent) OffsetX() int {
 
 // OffsetY .
 func (e *MouseEvent) OffsetY() int {
-	return e.val.Get("offsetX").Int()
+	return e.val.Get("offsetY").Int()
 }
 
 // ClientX .
@@ -42,7 +40,7 @@ func (e *MouseEvent) ClientX() int {
 
 // ClientY .
 func (e *MouseEvent) ClientY() int {
-	return e.val.Get("clientX").Int()
+	return e.val.Get("clientY").Int()
 }
 
 // ShiftKey .
