@@ -15,25 +15,11 @@ func newElemStore() *elemStore {
 	}
 }
 
-var valueElements = map[string]bool{
-	"button":   true,
-	"data":     true,
-	"input":    true,
-	"li":       true,
-	"meter":    true,
-	"option":   true,
-	"progress": true,
-	"param":    true,
-}
-
 func (es *elemStore) put(e *Elem) {
 	if e.isTextNode() {
 		e.val.Set("nodeValue", nil)
 	} else {
 		e.Clear()
-		if valueElements[e.ty] {
-			e.val.Set("value", nil)
-		}
 		for l := range e.listeners {
 			l.Remove()
 		}

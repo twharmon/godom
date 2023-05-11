@@ -15,67 +15,54 @@ type Elem struct {
 	attrs     map[string]struct{}
 }
 
-func (e *Elem) AppendChild(children ...*Elem) *Elem {
+func (e *Elem) AppendChild(children ...*Elem) {
 	for _, child := range children {
 		e.val.Call("appendChild", child.val)
 		e.children[child] = struct{}{}
 		child.parent = e
 	}
-	return e
 }
 
-func (e *Elem) Text(text any) *Elem {
+func (e *Elem) Text(text any) {
 	if e.isTextNode() {
 		e.val.Set("nodeValue", text)
 	} else {
 		panic(fmt.Sprintf("can not set text on element of type %s", e.ty))
 	}
-	return e
-	// If Text() allows setting one text node as children of other element then incorporate this:
-	// if len(e.children) == 1 && e.children[0].isTextNode() {
-	// 	e.children[0].val.Set("nodeValue", text)
-	// 	return e
-	// }
-	// e.Clear()
-	// n := CreateTextElem(text)
-	// e.val.Call("appendChild", n.val)
-	// e.children = append(e.children, n)
-	// return e
 }
 
-func (e *Elem) Attr(name string, value any) *Elem {
-	e.val.Set(name, value)
+func (e *Elem) Attr(name string, value any) {
+	e.val.Call("setAttribute", name, value)
 	e.registerAttr(name)
-	return e
 }
 
-func (e *Elem) Style(name string, value string) *Elem {
+func (e *Elem) RemoveAttr(name string) {
+	e.val.Call("removeAttribute", name)
+	e.deregisterAttr(name)
+}
+
+func (e *Elem) Style(name string, value string) {
 	e.val.Get("style").Set(name, value)
 	e.registerAttr("style")
-	return e
 }
 
-func (e *Elem) Classes(names ...string) *Elem {
+func (e *Elem) Classes(names ...string) {
 	e.val.Set("classList", strings.Join(names, " "))
 	e.registerAttr("class")
-	return e
 }
 
-func (e *Elem) AddClass(name string) *Elem {
+func (e *Elem) AddClass(name string) {
 	e.val.Get("classList").Call("add", name)
 	e.registerAttr("class")
-	return e
 }
 
-func (e *Elem) RemoveClass(name string) *Elem {
+func (e *Elem) RemoveClass(name string) {
 	e.val.Get("classList").Call("remove", name)
-	return e
 }
 
-func (e *Elem) ToggleClass(name string) *Elem {
+func (e *Elem) ToggleClass(name string) {
 	e.val.Get("classList").Call("toggle", name)
 	e.registerAttr("class")
-	return e
 }
 
 func (e *Elem) Clear() {
@@ -141,6 +128,10 @@ func (e *Elem) registerAttr(name string) {
 		e.attrs = make(map[string]struct{})
 	}
 	e.attrs[name] = struct{}{}
+}
+
+func (e *Elem) deregisterAttr(name string) {
+	delete(e.attrs, name)
 }
 
 func (e *Elem) isTextNode() bool {
