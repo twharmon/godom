@@ -46,6 +46,11 @@ func (e *Elem) Style(name string, value string) {
 	e.registerAttr("style")
 }
 
+func (e *Elem) Class(name string) {
+	e.val.Call("setAttribute", "class", name)
+	e.registerAttr("class")
+}
+
 func (e *Elem) Classes(names ...string) {
 	e.val.Set("classList", strings.Join(names, " "))
 	e.registerAttr("class")
